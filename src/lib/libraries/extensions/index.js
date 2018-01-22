@@ -1,6 +1,7 @@
 import boostImage from './boost.png';
 import musicImage from './music.png';
 import penImage from './pen.png';
+import langImage from './lang.png';
 import speechImage from './speech.png';
 import videoImage from './video-sensing.png';
 import wedoImage from './wedo.png';
@@ -21,6 +22,13 @@ export default [
         featured: true
     },
     {
+        name: 'Language',
+        extensionURL: 'language',
+        iconURL: langImage,
+        description: 'Make your project understand sentences.',
+        featured: true
+    },
+    {
         name: 'LEGO WeDo 2.0',
         extensionURL: '',
         iconURL: wedoImage,
@@ -30,11 +38,11 @@ export default [
     },
     {
         name: 'Speech',
-        extensionURL: '',
+        extensionURL: 'speech',
         iconURL: speechImage,
         description: 'Talk to your projects.',
         featured: true,
-        disabled: true
+        disabled: false
     },
     {
         name: 'Video Sensing',
