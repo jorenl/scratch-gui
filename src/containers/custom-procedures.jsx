@@ -75,7 +75,7 @@ class CustomProcedures extends React.Component {
         this.props.onRequestClose();
     }
     handleOk () {
-        const newMutation = this.mutationRoot ? this.mutationRoot.mutationToDom() : null;
+        const newMutation = this.mutationRoot ? this.mutationRoot.mutationToDom(true) : null;
         this.props.onRequestClose(newMutation);
     }
     handleAddLabel () {
@@ -147,7 +147,7 @@ CustomProcedures.defaultProps = {
 };
 
 const mapStateToProps = state => ({
-    mutator: state.customProcedures.mutator
+    mutator: state.scratchGui.customProcedures.mutator
 });
 
 export default connect(

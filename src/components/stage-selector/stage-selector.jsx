@@ -1,48 +1,88 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {defineMessages, intlShape, injectIntl, FormattedMessage} from 'react-intl';
 
 import Box from '../box/box.jsx';
-import IconButton from '../icon-button/icon-button.jsx';
+import ActionMenu from '../action-menu/action-menu.jsx';
 import CostumeCanvas from '../costume-canvas/costume-canvas.jsx';
 import styles from './stage-selector.css';
-import backdropIcon from './icon--backdrop.svg';
 
-const addBackdropMessage = (
-    <FormattedMessage
-        defaultMessage="Add Backdrop"
-        description="Button to add a backdrop in the target pane"
-        id="gui.stageSelector.targetPaneAddBackdrop"
-    />
-);
+import backdropIcon from '../action-menu/icon--backdrop.svg';
+import fileUploadIcon from '../action-menu/icon--file-upload.svg';
+import paintIcon from '../action-menu/icon--paint.svg';
+import surpriseIcon from '../action-menu/icon--surprise.svg';
+import searchIcon from '../action-menu/icon--search.svg';
+
+const messages = defineMessages({
+    addBackdropFromLibrary: {
+        id: 'gui.spriteSelector.addBackdropFromLibrary',
+        description: 'Button to add a stage in the target pane from library',
+        defaultMessage: 'Choose a Backdrop'
+    },
+    addBackdropFromPaint: {
+        id: 'gui.stageSelector.addBackdropFromPaint',
+        description: 'Button to add a stage in the target pane from paint',
+        defaultMessage: 'Paint'
+    },
+    addBackdropFromSurprise: {
+        id: 'gui.stageSelector.addBackdropFromSurprise',
+        description: 'Button to add a random stage in the target pane',
+        defaultMessage: 'Surprise'
+    },
+    addBackdropFromFile: {
+        id: 'gui.stageSelector.addBackdropFromFile',
+        description: 'Button to add a stage in the target pane from file',
+        defaultMessage: 'Upload Backdrop'
+    }
+});
 
 const StageSelector = props => {
     const {
         backdropCount,
+        fileInputRef,
+        intl,
         selected,
+        raised,
+        receivedBlocks,
         url,
+        onBackdropFileUploadClick,
+        onBackdropFileUpload,
         onClick,
+        onMouseEnter,
+        onMouseLeave,
         onNewBackdropClick,
+        onSurpriseBackdropClick,
+        onEmptyBackdropClick,
         ...componentProps
     } = props;
     return (
         <Box
             className={classNames(styles.stageSelector, {
-                [styles.isSelected]: selected
+                [styles.isSelected]: selected,
+                [styles.raised]: raised,
+                [styles.receivedBlocks]: receivedBlocks
             })}
             onClick={onClick}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
             {...componentProps}
         >
             <div className={styles.header}>
-                <div className={styles.headerTitle}>Stage</div>
+                <div className={styles.headerTitle}>
+                    <FormattedMessage
+                        defaultMessage="Stage"
+                        description="Label for the stage in the stage selector"
+                        id="gui.stageSelector.stage"
+                    />
+                </div>
             </div>
             {url ? (
                 <CostumeCanvas
                     className={styles.costumeCanvas}
-                    height={42}
+                    height={48}
                     url={url}
-                    width={56}
+                    width={64}
                 />
             ) : null}
             <div className={styles.label}>
@@ -53,10 +93,33 @@ const StageSelector = props => {
                 />
             </div>
             <div className={styles.count}>{backdropCount}</div>
-            <IconButton
+            <ActionMenu
                 className={styles.addButton}
                 img={backdropIcon}
-                title={addBackdropMessage}
+                moreButtons={[
+                    {
+                        title: intl.formatMessage(messages.addBackdropFromFile),
+                        img: fileUploadIcon,
+                        onClick: onBackdropFileUploadClick,
+                        fileAccept: '.svg, .png, .jpg, .jpeg', // Bitmap coming soon
+                        fileChange: onBackdropFileUpload,
+                        fileInput: fileInputRef
+                    }, {
+                        title: intl.formatMessage(messages.addBackdropFromSurprise),
+                        img: surpriseIcon,
+                        onClick: onSurpriseBackdropClick
+
+                    }, {
+                        title: intl.formatMessage(messages.addBackdropFromPaint),
+                        img: paintIcon,
+                        onClick: onEmptyBackdropClick
+                    }, {
+                        title: intl.formatMessage(messages.addBackdropFromLibrary),
+                        img: searchIcon,
+                        onClick: onNewBackdropClick
+                    }
+                ]}
+                title={intl.formatMessage(messages.addBackdropFromLibrary)}
                 onClick={onNewBackdropClick}
             />
         </Box>
@@ -65,9 +128,20 @@ const StageSelector = props => {
 
 StageSelector.propTypes = {
     backdropCount: PropTypes.number.isRequired,
+    fileInputRef: PropTypes.func,
+    intl: intlShape.isRequired,
+    onBackdropFileUpload: PropTypes.func,
+    onBackdropFileUploadClick: PropTypes.func,
     onClick: PropTypes.func,
+    onEmptyBackdropClick: PropTypes.func,
+    onMouseEnter: PropTypes.func,
+    onMouseLeave: PropTypes.func,
     onNewBackdropClick: PropTypes.func,
+    onSurpriseBackdropClick: PropTypes.func,
+    raised: PropTypes.bool.isRequired,
+    receivedBlocks: PropTypes.bool.isRequired,
     selected: PropTypes.bool.isRequired,
     url: PropTypes.string
 };
-export default StageSelector;
+
+export default injectIntl(StageSelector);

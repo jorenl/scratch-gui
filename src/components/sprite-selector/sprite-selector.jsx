@@ -1,37 +1,71 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
+
 
 import Box from '../box/box.jsx';
 import SpriteInfo from '../../containers/sprite-info.jsx';
-import SpriteSelectorItem from '../../containers/sprite-selector-item.jsx';
-import IconButton from '../icon-button/icon-button.jsx';
+import SpriteList from './sprite-list.jsx';
+import ActionMenu from '../action-menu/action-menu.jsx';
+import {STAGE_DISPLAY_SIZES} from '../../lib/layout-constants';
 
 import styles from './sprite-selector.css';
-import spriteIcon from './icon--sprite.svg';
 
-const addSpriteMessage = (
-    <FormattedMessage
-        defaultMessage="Add Sprite"
-        description="Button to add a sprite in the target pane"
-        id="gui.spriteSelector.addSprite"
-    />
-);
+import fileUploadIcon from '../action-menu/icon--file-upload.svg';
+import paintIcon from '../action-menu/icon--paint.svg';
+import spriteIcon from '../action-menu/icon--sprite.svg';
+import surpriseIcon from '../action-menu/icon--surprise.svg';
+import searchIcon from '../action-menu/icon--search.svg';
+
+const messages = defineMessages({
+    addSpriteFromLibrary: {
+        id: 'gui.spriteSelector.addSpriteFromLibrary',
+        description: 'Button to add a sprite in the target pane from library',
+        defaultMessage: 'Choose a Sprite'
+    },
+    addSpriteFromPaint: {
+        id: 'gui.spriteSelector.addSpriteFromPaint',
+        description: 'Button to add a sprite in the target pane from paint',
+        defaultMessage: 'Paint'
+    },
+    addSpriteFromSurprise: {
+        id: 'gui.spriteSelector.addSpriteFromSurprise',
+        description: 'Button to add a random sprite in the target pane',
+        defaultMessage: 'Surprise'
+    },
+    addSpriteFromFile: {
+        id: 'gui.spriteSelector.addSpriteFromFile',
+        description: 'Button to add a sprite in the target pane from file',
+        defaultMessage: 'Upload'
+    }
+});
 
 const SpriteSelectorComponent = function (props) {
     const {
+        editingTarget,
+        hoveredTarget,
+        intl,
         onChangeSpriteDirection,
         onChangeSpriteName,
         onChangeSpriteSize,
         onChangeSpriteVisibility,
         onChangeSpriteX,
         onChangeSpriteY,
+        onDrop,
         onDeleteSprite,
         onDuplicateSprite,
+        onExportSprite,
+        onFileUploadClick,
         onNewSpriteClick,
+        onPaintSpriteClick,
         onSelectSprite,
+        onSpriteUpload,
+        onSurpriseSpriteClick,
+        raised,
         selectedId,
+        spriteFileInput,
         sprites,
+        stageSize,
         ...componentProps
     } = props;
     let selectedSprite = sprites[selectedId];
@@ -51,6 +85,7 @@ const SpriteSelectorComponent = function (props) {
                 disabled={spriteInfoDisabled}
                 name={selectedSprite.name}
                 size={selectedSprite.size}
+                stageSize={stageSize}
                 visible={selectedSprite.visible}
                 x={selectedSprite.x}
                 y={selectedSprite.y}
@@ -63,31 +98,45 @@ const SpriteSelectorComponent = function (props) {
             />
 
             <Box className={styles.scrollWrapper}>
-                <Box className={styles.itemsWrapper}>
-                    {Object.keys(sprites)
-                        // Re-order by list order
-                        .sort((id1, id2) => sprites[id1].order - sprites[id2].order)
-                        .map(id => sprites[id])
-                        .map(sprite => (
-                            <SpriteSelectorItem
-                                assetId={sprite.costume && sprite.costume.assetId}
-                                className={styles.sprite}
-                                id={sprite.id}
-                                key={sprite.id}
-                                name={sprite.name}
-                                selected={sprite.id === selectedId}
-                                onClick={onSelectSprite}
-                                onDeleteButtonClick={onDeleteSprite}
-                                onDuplicateButtonClick={onDuplicateSprite}
-                            />
-                        ))
-                    }
-                </Box>
+                <SpriteList
+                    editingTarget={editingTarget}
+                    hoveredTarget={hoveredTarget}
+                    items={Object.keys(sprites).map(id => sprites[id])}
+                    raised={raised}
+                    selectedId={selectedId}
+                    onDeleteSprite={onDeleteSprite}
+                    onDrop={onDrop}
+                    onDuplicateSprite={onDuplicateSprite}
+                    onExportSprite={onExportSprite}
+                    onSelectSprite={onSelectSprite}
+                />
             </Box>
-            <IconButton
+            <ActionMenu
                 className={styles.addButton}
                 img={spriteIcon}
-                title={addSpriteMessage}
+                moreButtons={[
+                    {
+                        title: intl.formatMessage(messages.addSpriteFromFile),
+                        img: fileUploadIcon,
+                        onClick: onFileUploadClick,
+                        fileAccept: '.svg, .png, .jpg, .jpeg, .sprite2, .sprite3',
+                        fileChange: onSpriteUpload,
+                        fileInput: spriteFileInput
+                    }, {
+                        title: intl.formatMessage(messages.addSpriteFromSurprise),
+                        img: surpriseIcon,
+                        onClick: onSurpriseSpriteClick // TODO need real function for this
+                    }, {
+                        title: intl.formatMessage(messages.addSpriteFromPaint),
+                        img: paintIcon,
+                        onClick: onPaintSpriteClick // TODO need real function for this
+                    }, {
+                        title: intl.formatMessage(messages.addSpriteFromLibrary),
+                        img: searchIcon,
+                        onClick: onNewSpriteClick
+                    }
+                ]}
+                title={intl.formatMessage(messages.addSpriteFromLibrary)}
                 onClick={onNewSpriteClick}
             />
         </Box>
@@ -95,6 +144,12 @@ const SpriteSelectorComponent = function (props) {
 };
 
 SpriteSelectorComponent.propTypes = {
+    editingTarget: PropTypes.string,
+    hoveredTarget: PropTypes.shape({
+        hoveredSprite: PropTypes.string,
+        receivedBlocks: PropTypes.bool
+    }),
+    intl: intlShape.isRequired,
     onChangeSpriteDirection: PropTypes.func,
     onChangeSpriteName: PropTypes.func,
     onChangeSpriteSize: PropTypes.func,
@@ -102,10 +157,18 @@ SpriteSelectorComponent.propTypes = {
     onChangeSpriteX: PropTypes.func,
     onChangeSpriteY: PropTypes.func,
     onDeleteSprite: PropTypes.func,
+    onDrop: PropTypes.func,
     onDuplicateSprite: PropTypes.func,
+    onExportSprite: PropTypes.func,
+    onFileUploadClick: PropTypes.func,
     onNewSpriteClick: PropTypes.func,
+    onPaintSpriteClick: PropTypes.func,
     onSelectSprite: PropTypes.func,
+    onSpriteUpload: PropTypes.func,
+    onSurpriseSpriteClick: PropTypes.func,
+    raised: PropTypes.bool,
     selectedId: PropTypes.string,
+    spriteFileInput: PropTypes.func,
     sprites: PropTypes.shape({
         id: PropTypes.shape({
             costume: PropTypes.shape({
@@ -118,7 +181,8 @@ SpriteSelectorComponent.propTypes = {
             name: PropTypes.string.isRequired,
             order: PropTypes.number.isRequired
         })
-    })
+    }),
+    stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired
 };
 
-export default SpriteSelectorComponent;
+export default injectIntl(SpriteSelectorComponent);
