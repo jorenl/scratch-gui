@@ -14,6 +14,8 @@ import ProjectLoader from '../../containers/project-loader.jsx';
 import Menu from '../../containers/menu.jsx';
 import {MenuItem, MenuSection} from '../menu/menu.jsx';
 import ProjectSaver from '../../containers/project-saver.jsx';
+import DeletionRestorer from '../../containers/deletion-restorer.jsx';
+import TurboMode from '../../containers/turbo-mode.jsx';
 
 import {openTipsLibrary} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -89,10 +91,11 @@ MenuBarItemTooltip.propTypes = {
     place: PropTypes.oneOf(['top', 'bottom', 'left', 'right'])
 };
 
-const MenuItemTooltip = ({id, children, className}) => (
+const MenuItemTooltip = ({id, isRtl, children, className}) => (
     <ComingSoonTooltip
         className={classNames(styles.comingSoon, className)}
-        place="right"
+        isRtl={isRtl}
+        place={isRtl ? 'left' : 'right'}
         tooltipClassName={styles.comingSoonTooltip}
         tooltipId={id}
     >
@@ -103,7 +106,8 @@ const MenuItemTooltip = ({id, children, className}) => (
 MenuItemTooltip.propTypes = {
     children: PropTypes.node,
     className: PropTypes.string,
-    id: PropTypes.string
+    id: PropTypes.string,
+    isRtl: PropTypes.bool
 };
 
 const MenuBarMenu = ({
@@ -132,13 +136,20 @@ class MenuBar extends React.Component {
     constructor (props) {
         super(props);
         bindAll(this, [
-            'handleLanguageMouseUp'
+            'handleLanguageMouseUp',
+            'handleRestoreOption'
         ]);
     }
     handleLanguageMouseUp (e) {
         if (!this.props.languageMenuOpen) {
             this.props.onClickLanguage(e);
         }
+    }
+    handleRestoreOption (restoreFun) {
+        return () => {
+            restoreFun();
+            this.props.onRequestCloseEdit();
+        };
     }
     render () {
         return (
@@ -180,6 +191,7 @@ class MenuBar extends React.Component {
                                 </div>
                                 <MenuBarMenu
                                     open={this.props.languageMenuOpen}
+                                    place={this.props.isRtl ? 'left' : 'right'}
                                     onRequestClose={this.props.onRequestCloseLanguage}
                                 >
                                     <LanguageSelector />
@@ -202,9 +214,13 @@ class MenuBar extends React.Component {
                             </div>
                             <MenuBarMenu
                                 open={this.props.fileMenuOpen}
+                                place={this.props.isRtl ? 'left' : 'right'}
                                 onRequestClose={this.props.onRequestCloseFile}
                             >
-                                <MenuItemTooltip id="new">
+                                <MenuItemTooltip
+                                    id="new"
+                                    isRtl={this.props.isRtl}
+                                >
                                     <MenuItem>
                                         <FormattedMessage
                                             defaultMessage="New"
@@ -214,7 +230,10 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                 </MenuItemTooltip>
                                 <MenuSection>
-                                    <MenuItemTooltip id="save">
+                                    <MenuItemTooltip
+                                        id="save"
+                                        isRtl={this.props.isRtl}
+                                    >
                                         <MenuItem>
                                             <FormattedMessage
                                                 defaultMessage="Save now"
@@ -223,7 +242,10 @@ class MenuBar extends React.Component {
                                             />
                                         </MenuItem>
                                     </MenuItemTooltip>
-                                    <MenuItemTooltip id="copy">
+                                    <MenuItemTooltip
+                                        id="copy"
+                                        isRtl={this.props.isRtl}
+                                    >
                                         <MenuItem>
                                             <FormattedMessage
                                                 defaultMessage="Save as a copy"
@@ -276,36 +298,46 @@ class MenuBar extends React.Component {
                             </div>
                             <MenuBarMenu
                                 open={this.props.editMenuOpen}
+                                place={this.props.isRtl ? 'left' : 'right'}
                                 onRequestClose={this.props.onRequestCloseEdit}
                             >
-                                <MenuItemTooltip id="undo">
-                                    <MenuItem>
-                                        <FormattedMessage
-                                            defaultMessage="Undo"
-                                            description="Menu bar item for undoing"
-                                            id="gui.menuBar.undo"
-                                        />
-                                    </MenuItem>
-                                </MenuItemTooltip>
-                                <MenuItemTooltip id="redo">
-                                    <MenuItem>
-                                        <FormattedMessage
-                                            defaultMessage="Redo"
-                                            description="Menu bar item for redoing"
-                                            id="gui.menuBar.redo"
-                                        />
-                                    </MenuItem>
-                                </MenuItemTooltip>
-                                <MenuSection>
-                                    <MenuItemTooltip id="turbo">
-                                        <MenuItem>
+                                <DeletionRestorer>{(handleRestore, {restorable, deletedItem}) => (
+                                    <MenuItem
+                                        className={classNames({[styles.disabled]: !restorable})}
+                                        onClick={this.handleRestoreOption(handleRestore)}
+                                    >
+                                        {deletedItem === 'Sprite' ?
                                             <FormattedMessage
-                                                defaultMessage="Turbo mode"
-                                                description="Menu bar item for toggling turbo mode"
-                                                id="gui.menuBar.turboMode"
+                                                defaultMessage="Restore Sprite"
+                                                description="Menu bar item for restoring the last deleted sprite."
+                                                id="gui.menuBar.restoreSprite"
+                                            /> :
+                                            <FormattedMessage
+                                                defaultMessage="Restore"
+                                                description="Menu bar item for restoring the last deleted item in its disabled state." /* eslint-disable-line max-len */
+                                                id="gui.menuBar.restore"
                                             />
+                                        }
+                                    </MenuItem>
+                                )}</DeletionRestorer>
+                                <MenuSection>
+                                    <TurboMode>{(toggleTurboMode, {turboMode}) => (
+                                        <MenuItem onClick={toggleTurboMode}>
+                                            {turboMode ? (
+                                                <FormattedMessage
+                                                    defaultMessage="Turn off Turbo Mode"
+                                                    description="Menu bar item for turning off turbo mode"
+                                                    id="gui.menuBar.turboModeOff"
+                                                />
+                                            ) : (
+                                                <FormattedMessage
+                                                    defaultMessage="Turn on Turbo Mode"
+                                                    description="Menu bar item for turning on turbo mode"
+                                                    id="gui.menuBar.turboModeOn"
+                                                />
+                                            )}
                                         </MenuItem>
-                                    </MenuItemTooltip>
+                                    )}</TurboMode>
                                 </MenuSection>
                             </MenuBarMenu>
                         </div>
@@ -376,7 +408,7 @@ class MenuBar extends React.Component {
                 <div className={classNames(styles.menuBarItem, styles.feedbackButtonWrapper)}>
                     <a
                         className={styles.feedbackLink}
-                        href="https://scratch.mit.edu/discuss/topic/299791/"
+                        href="https://scratch.mit.edu/discuss/topic/312261/"
                         rel="noopener noreferrer"
                         target="_blank"
                     >
@@ -409,7 +441,7 @@ class MenuBar extends React.Component {
                     </MenuBarItemTooltip>
                     <MenuBarItemTooltip
                         id="account-nav"
-                        place="left"
+                        place={this.props.isRtl ? 'right' : 'left'}
                     >
                         <div
                             className={classNames(
@@ -442,6 +474,7 @@ MenuBar.propTypes = {
     enableCommunity: PropTypes.bool,
     fileMenuOpen: PropTypes.bool,
     intl: intlShape,
+    isRtl: PropTypes.bool,
     languageMenuOpen: PropTypes.bool,
     onClickEdit: PropTypes.func,
     onClickFile: PropTypes.func,
@@ -456,6 +489,7 @@ MenuBar.propTypes = {
 const mapStateToProps = state => ({
     fileMenuOpen: fileMenuOpen(state),
     editMenuOpen: editMenuOpen(state),
+    isRtl: state.locales.isRtl,
     languageMenuOpen: languageMenuOpen(state)
 });
 

@@ -16,6 +16,9 @@ import microbitDeviceImage from './device-connection/microbit/microbit-illustrat
 import microbitMenuImage from './device-connection/microbit/microbit-small.svg';
 import ev3DeviceImage from './device-connection/ev3/ev3-hub-illustration.svg';
 import ev3MenuImage from './device-connection/ev3/ev3-small.svg';
+import wedoDeviceImage from './device-connection/wedo/wedo-illustration.svg';
+import wedoMenuImage from './device-connection/wedo/wedo-small.svg';
+import wedoButtonImage from './device-connection/wedo/wedo-button-illustration.svg';
 
 export default [
     {
@@ -108,6 +111,7 @@ export default [
         featured: true,
         disabled: false,
         launchDeviceConnectionFlow: true,
+        useAutoScan: false,
         deviceImage: microbitDeviceImage,
         smallDeviceImage: microbitMenuImage,
         connectingMessage: (
@@ -133,6 +137,7 @@ export default [
         featured: true,
         disabled: false,
         launchDeviceConnectionFlow: true,
+        useAutoScan: false,
         deviceImage: ev3DeviceImage,
         smallDeviceImage: ev3MenuImage,
         connectingMessage: (
@@ -155,8 +160,20 @@ export default [
                 id="gui.extension.wedo2.description"
             />
         ),
-        featured: true,
-        disabled: true
+        disabled: true,
+        launchDeviceConnectionFlow: true,
+        useAutoScan: true,
+        deviceImage: wedoDeviceImage,
+        smallDeviceImage: wedoMenuImage,
+        deviceButtonImage: wedoButtonImage,
+        connectingMessage: (
+            <FormattedMessage
+                defaultMessage="Connecting"
+                description="Message to help people connect to their WeDo."
+                id="gui.extension.wedo2.connectingMessage"
+            />
+        ),
+        helpLink: 'https://scratch.mit.edu/wedo'
     },
     {
         name: (
