@@ -10,6 +10,7 @@ import ev3Image from './ev3.png';
 import wedoImage from './wedo.png';
 import langImage from './lang.png';
 import speechImage from './speech.png';
+import gestureremoteImage from './gesture-remote.png';
 
 import microbitDeviceImage from './device-connection/microbit/microbit-illustration.svg';
 import microbitMenuImage from './device-connection/microbit/microbit-small.svg';
@@ -191,6 +192,25 @@ export default [
                 defaultMessage="Make your projects understand sentences."
                 description="Description for the 'Language' extension"
                 id="gui.extension.language.description"
+            />
+        ),
+        featured: true
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="Gesture Remote"
+                description="Name for the 'Gesture Remote' extension"
+                id="gui.extension.gestureremote.name"
+            />
+        ),
+        extensionId: 'gestureRemote',
+        iconURL: gestureremoteImage,
+        description: (
+            <FormattedMessage
+                defaultMessage="Use your phone to control your pojects."
+                description="Description for the 'Gesture Remote' extension"
+                id="gui.extension.gestureremote.description"
             />
         ),
         featured: true
