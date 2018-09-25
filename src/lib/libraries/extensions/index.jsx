@@ -160,7 +160,8 @@ export default [
                 id="gui.extension.wedo2.description"
             />
         ),
-        disabled: true,
+        featured: true,
+        disabled: false,
         launchDeviceConnectionFlow: true,
         useAutoScan: true,
         deviceImage: wedoDeviceImage,
@@ -178,18 +179,37 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Speech"
-                description="Name for the 'Pen' extension"
-                id="gui.extension.speech.name"
+                defaultMessage="Text to Speech"
+                description=""
+                id="gui.extension.text2speech.name"
             />
         ),
-        extensionId: 'speech',
-        iconURL: speechImage,
+        extensionId: 'text2speech',
+        iconURL: musicImage,
         description: (
             <FormattedMessage
-                defaultMessage="Talk to your projects."
-                description="Description for the 'Speech' extension"
-                id="gui.extension.speech.description"
+                defaultMessage="Text to Speech!"
+                description=""
+                id="gui.extension.text2speech.description"
+            />
+        ),
+        featured: true
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="Speech to Text"
+                description="Name for the 'Google Translate' extension. Do not translate 'Google'."
+                id="gui.extension.speech2text.name"
+            />
+        ),
+        extensionId: 'speech2text',
+        iconURL: musicImage,
+        description: (
+            <FormattedMessage
+                defaultMessage="Speech to text!"
+                description=""
+                id="gui.extension.speech2text.description"
             />
         ),
         featured: true

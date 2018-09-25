@@ -72,12 +72,10 @@ class GUI extends React.Component {
                 `Failed to load project from server [id=${window.location.hash}]: ${this.state.errorMessage}`);
         }
         const {
-            assetHost, // eslint-disable-line no-unused-vars
             children,
             fetchingProject,
             loadingStateVisible,
             projectData, // eslint-disable-line no-unused-vars
-            projectHost, // eslint-disable-line no-unused-vars
             vm,
             ...componentProps
         } = this.props;

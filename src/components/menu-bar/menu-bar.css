@@ -48,8 +48,13 @@
     height:  1.5rem;
 }
 
+.language-caret {
+    margin-bottom: .625rem;
+}
+
 .language-menu {
     display: inline-flex;
+    width: $language-selector-width;
 }
 
 .menu {
@@ -183,4 +188,17 @@
 
 .disabled {
     opacity: 0.5;
+}
+
+.save-in-progress {
+  animation: hue-rotate 3s linear infinite;
+}
+
+@keyframes hue-rotate {
+  from {
+    filter: hue-rotate();
+  }
+  to {
+    filter: hue-rotate(360deg);
+  }
 }

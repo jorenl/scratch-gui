@@ -137,8 +137,11 @@ class MenuBar extends React.Component {
         super(props);
         bindAll(this, [
             'handleLanguageMouseUp',
-            'handleRestoreOption'
+            'handleRestoreOption',
+            'handleCloseFileMenuAndThen',
+            'restoreOptionMessage'
         ]);
+        this.state = {projectSaveInProgress: false};
     }
     handleLanguageMouseUp (e) {
         if (!this.props.languageMenuOpen) {
@@ -151,53 +154,97 @@ class MenuBar extends React.Component {
             this.props.onRequestCloseEdit();
         };
     }
+    handleUpdateProject (updateFun) {
+        return () => {
+            this.props.onRequestCloseFile();
+            this.setState({projectSaveInProgress: true},
+                () => {
+                    updateFun().then(() => {
+                        this.setState({projectSaveInProgress: false});
+                    });
+                }
+            );
+        };
+    }
+    handleCloseFileMenuAndThen (fn) {
+        return () => {
+            this.props.onRequestCloseFile();
+            fn();
+        };
+    }
+    restoreOptionMessage (deletedItem) {
+        switch (deletedItem) {
+        case 'Sprite':
+            return (<FormattedMessage
+                defaultMessage="Restore Sprite"
+                description="Menu bar item for restoring the last deleted sprite."
+                id="gui.menuBar.restoreSprite"
+            />);
+        case 'Sound':
+            return (<FormattedMessage
+                defaultMessage="Restore Sound"
+                description="Menu bar item for restoring the last deleted sound."
+                id="gui.menuBar.restoreSound"
+            />);
+        case 'Costume':
+            return (<FormattedMessage
+                defaultMessage="Restore Costume"
+                description="Menu bar item for restoring the last deleted costume."
+                id="gui.menuBar.restoreCostume"
+            />);
+        default: {
+            return (<FormattedMessage
+                defaultMessage="Restore"
+                description="Menu bar item for restoring the last deleted item in its disabled state." /* eslint-disable-line max-len */
+                id="gui.menuBar.restore"
+            />);
+        }
+        }
+    }
     render () {
+        const saveNowMessage = (
+            <FormattedMessage
+                defaultMessage="Save now"
+                description="Menu bar item for saving now"
+                id="gui.menuBar.saveNow"
+            />
+        );
         return (
-            <Box className={styles.menuBar}>
+            <Box
+                className={classNames(styles.menuBar, {
+                    [styles.saveInProgress]: this.state.projectSaveInProgress
+                })}
+            >
                 <div className={styles.mainMenu}>
                     <div className={styles.fileGroup}>
                         <div className={classNames(styles.menuBarItem)}>
-                            <img
-                                alt="Scratch"
-                                className={styles.scratchLogo}
-                                draggable={false}
-                                src={scratchLogo}
-                            />
+                            <a
+                                href="https://scratch.mit.edu"
+                                rel="noopener noreferrer"
+                                target="_blank"
+                            >
+                                <img
+                                    alt="Scratch"
+                                    className={styles.scratchLogo}
+                                    draggable={false}
+                                    src={scratchLogo}
+                                />
+                            </a>
                         </div>
                         <div
-                            className={classNames(styles.menuBarItem, styles.hoverable, {
-                                [styles.active]: this.props.languageMenuOpen
-                            })}
-                            onMouseUp={this.handleLanguageMouseUp}
+                            className={classNames(styles.menuBarItem, styles.hoverable, styles.languageMenu)}
                         >
-                            {/* @TODO: remove coming soon tooltip wrapper  https://github.com/LLK/scratch-gui/issues/2664  */}
-                            <MenuBarItemTooltip
-                                enable
-                                id="menubar-selector"
-                                place="right"
-                            >
-                                <div
-                                    aria-label={this.props.intl.formatMessage(ariaMessages.language)}
-                                    className={classNames(styles.languageMenu)}
-                                >
-                                    <img
-                                        className={styles.languageIcon}
-                                        src={languageIcon}
-                                    />
-                                    <img
-                                        className={styles.dropdownCaret}
-                                        src={dropdownCaret}
-                                    />
-                                </div>
-                                <MenuBarMenu
-                                    open={this.props.languageMenuOpen}
-                                    place={this.props.isRtl ? 'left' : 'right'}
-                                    onRequestClose={this.props.onRequestCloseLanguage}
-                                >
-                                    <LanguageSelector />
-                                </MenuBarMenu>
-
-                            </MenuBarItemTooltip>
+                            <div>
+                                <img
+                                    className={styles.languageIcon}
+                                    src={languageIcon}
+                                />
+                                <img
+                                    className={styles.languageCaret}
+                                    src={dropdownCaret}
+                                />
+                            </div>
+                            <LanguageSelector label={this.props.intl.formatMessage(ariaMessages.language)} />
                         </div>
                         <div
                             className={classNames(styles.menuBarItem, styles.hoverable, {
@@ -230,18 +277,20 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                 </MenuItemTooltip>
                                 <MenuSection>
-                                    <MenuItemTooltip
-                                        id="save"
-                                        isRtl={this.props.isRtl}
-                                    >
-                                        <MenuItem>
-                                            <FormattedMessage
-                                                defaultMessage="Save now"
-                                                description="Menu bar item for saving now"
-                                                id="gui.menuBar.saveNow"
-                                            />
-                                        </MenuItem>
-                                    </MenuItemTooltip>
+                                    <ProjectSaver>{(saveProject, updateProject) => (
+                                        this.props.canUpdateProject ? (
+                                            <MenuItem onClick={this.handleUpdateProject(updateProject)}>
+                                                {saveNowMessage}
+                                            </MenuItem>
+                                        ) : (
+                                            <MenuItemTooltip
+                                                id="save"
+                                                isRtl={this.props.isRtl}
+                                            >
+                                                <MenuItem>{saveNowMessage}</MenuItem>
+                                            </MenuItemTooltip>
+                                        )
+                                    )}</ProjectSaver>
                                     <MenuItemTooltip
                                         id="copy"
                                         isRtl={this.props.isRtl}
@@ -268,10 +317,9 @@ class MenuBar extends React.Component {
                                             {renderFileInput()}
                                         </MenuItem>
                                     )}</ProjectLoader>
-                                    <ProjectSaver>{(saveProject, saveProps) => (
+                                    <ProjectSaver>{saveProject => (
                                         <MenuItem
-                                            onClick={saveProject}
-                                            {...saveProps}
+                                            onClick={this.handleCloseFileMenuAndThen(saveProject)}
                                         >
                                             <FormattedMessage
                                                 defaultMessage="Save to your computer"
@@ -306,18 +354,7 @@ class MenuBar extends React.Component {
                                         className={classNames({[styles.disabled]: !restorable})}
                                         onClick={this.handleRestoreOption(handleRestore)}
                                     >
-                                        {deletedItem === 'Sprite' ?
-                                            <FormattedMessage
-                                                defaultMessage="Restore Sprite"
-                                                description="Menu bar item for restoring the last deleted sprite."
-                                                id="gui.menuBar.restoreSprite"
-                                            /> :
-                                            <FormattedMessage
-                                                defaultMessage="Restore"
-                                                description="Menu bar item for restoring the last deleted item in its disabled state." /* eslint-disable-line max-len */
-                                                id="gui.menuBar.restore"
-                                            />
-                                        }
+                                        {this.restoreOptionMessage(deletedItem)}
                                     </MenuItem>
                                 )}</DeletionRestorer>
                                 <MenuSection>
@@ -470,6 +507,7 @@ class MenuBar extends React.Component {
 }
 
 MenuBar.propTypes = {
+    canUpdateProject: PropTypes.bool,
     editMenuOpen: PropTypes.bool,
     enableCommunity: PropTypes.bool,
     fileMenuOpen: PropTypes.bool,
@@ -487,6 +525,7 @@ MenuBar.propTypes = {
 };
 
 const mapStateToProps = state => ({
+    canUpdateProject: typeof (state.session && state.session.session && state.session.session.user) !== 'undefined',
     fileMenuOpen: fileMenuOpen(state),
     editMenuOpen: editMenuOpen(state),
     isRtl: state.locales.isRtl,
