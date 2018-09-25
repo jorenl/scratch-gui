@@ -173,5 +173,43 @@ export default [
         ),
         helpLink: 'https://scratch.mit.edu/wedo'
 
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="Text to Speech"
+                description=""
+                id="gui.extension.text2speech.name"
+            />
+        ),
+        extensionId: 'text2speech',
+        iconURL: musicImage,
+        description: (
+            <FormattedMessage
+                defaultMessage="Text to Speech!"
+                description=""
+                id="gui.extension.text2speech.description"
+            />
+        ),
+        featured: true
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="Speech to Text"
+                description="Name for the 'Google Translate' extension. Do not translate 'Google'."
+                id="gui.extension.speech2text.name"
+            />
+        ),
+        extensionId: 'speech2text',
+        iconURL: musicImage,
+        description: (
+            <FormattedMessage
+                defaultMessage="Speech to text!"
+                description=""
+                id="gui.extension.speech2text.description"
+            />
+        ),
+        featured: true
     }
 ];
