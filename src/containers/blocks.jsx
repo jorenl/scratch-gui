@@ -9,6 +9,7 @@ import VM from 'scratch-vm';
 
 import analytics from '../lib/analytics';
 import Prompt from './prompt.jsx';
+import LanguageModal from './language-modal.jsx';
 import ConnectionModal from './connection-modal.jsx';
 import BlocksComponent from '../components/blocks/blocks.jsx';
 import ExtensionLibrary from './extension-library.jsx';
@@ -53,6 +54,8 @@ class Blocks extends React.Component {
             'onBlockGlowOff',
             'handleExtensionAdded',
             'handleBlocksInfoUpdate',
+            'handleLanguageOpenLearnWindow',
+            'handleLanguageSelectModel',
             'onTargetsUpdate',
             'onVisualReport',
             'onWorkspaceUpdate',
@@ -65,7 +68,8 @@ class Blocks extends React.Component {
         this.state = {
             workspaceMetrics: {},
             prompt: null,
-            connectionModal: null
+            connectionModal: null,
+            languageModal: null
         };
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
         this.toolboxUpdateQueue = [];
@@ -105,6 +109,7 @@ class Blocks extends React.Component {
     shouldComponentUpdate (nextProps, nextState) {
         return (
             this.state.prompt !== nextState.prompt ||
+            this.state.languageModal !== nextState.languageModal ||
             this.state.connectionModal !== nextState.connectionModal ||
             this.props.isVisible !== nextProps.isVisible ||
             this.props.toolboxXML !== nextProps.toolboxXML ||
@@ -221,6 +226,8 @@ class Blocks extends React.Component {
         this.props.vm.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
         this.props.vm.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.addListener('PERIPHERAL_ERROR', this.handleStatusButtonUpdate);
+        this.props.vm.addListener('EXT_LANGUAGE_OPEN_LEARN_WINDOW', this.handleLanguageOpenLearnWindow);
+        this.props.vm.addListener('EXT_LANGUAGE_SELECT_MODEL', this.handleLanguageSelectModel);
     }
     detachVM () {
         this.props.vm.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
@@ -234,6 +241,8 @@ class Blocks extends React.Component {
         this.props.vm.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
         this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.removeListener('PERIPHERAL_ERROR', this.handleStatusButtonUpdate);
+        this.props.vm.removeListener('EXT_LANGUAGE_OPEN_LEARN_WINDOW', this.handleLanguageOpenLearnWindow);
+        this.props.vm.removeListener('EXT_LANGUAGE_SELECT_MODEL', this.handleLanguageSelectModel);
     }
 
     updateToolboxBlockValue (id, value) {
@@ -396,6 +405,40 @@ class Blocks extends React.Component {
         ws.refreshToolboxSelection_();
         ws.toolbox_.scrollToCategoryById('myBlocks');
     }
+    handleLanguageOpenLearnWindow (opts) {
+        console.log('handleLanguageOpenLearnWindow');
+
+        const p = {languageModal: {
+            action: 'learn',
+            model: opts.model,
+            lastRecognition: opts.lastRecognition,
+            onOk: () => {
+                this.setState({languageModal: null});
+                this.props.vm.extensionManager.refreshBlocks();
+            },
+            onCancel: () => {
+                this.setState({languageModal: null});
+            }
+        }};
+        
+        this.setState(p);
+    }
+    handleLanguageSelectModel (opts) {
+        console.log('handleLanguageSelectModel');
+        const p = {languageModal: {
+            action: 'selectModel',
+            models: opts.models,
+            onOk: (selection) => {
+                this.setState({languageModal: null});
+                this.props.vm.runtime.emit('EXT_LANGUAGE_MODEL_SELECTED', selection)
+            },
+            onCancel: () => {
+                this.setState({languageModal: null});
+            }
+        }};
+        
+        this.setState(p);
+    }
     render () {
         /* eslint-disable no-unused-vars */
         const {
@@ -431,6 +474,16 @@ class Blocks extends React.Component {
                         title={this.state.prompt.title}
                         onCancel={this.handlePromptClose}
                         onOk={this.handlePromptCallback}
+                    />
+                ) : null}
+                {this.state.languageModal ? (
+                    <LanguageModal
+                        action={this.state.languageModal.action}
+                        model={this.state.languageModal.model}
+                        models={this.state.languageModal.models}
+                        lastRecognition={this.state.languageModal.lastRecognition}
+                        onOk={this.state.languageModal.onOk}
+                        onCancel={this.state.languageModal.onCancel}
                     />
                 ) : null}
                 {this.state.connectionModal ? (
